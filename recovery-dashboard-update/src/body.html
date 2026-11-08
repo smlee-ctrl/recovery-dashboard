@@ -1,0 +1,362 @@
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="app">
+  <header class="top">
+    <div style="display:grid;gap:2px">
+      <h1>Recovery</h1>
+      <span class="status" id="status"><i></i><span id="statusText">Connecting to your log…</span><button type="button" class="acct" id="acct" hidden></button></span>
+      <span class="hint">Press and hold any tile to rearrange it</span>
+    </div>
+    <div class="nav">
+      <button class="pill" id="prev" aria-label="Previous day">‹</button>
+      <span class="day" id="dayLabel">—</span>
+      <button class="pill" id="next" aria-label="Next day">›</button>
+      <button class="pill" id="latest">Latest WHOOP day</button>
+      <button class="pill" id="today">Today</button>
+      <button class="pill kbonly" id="edit" aria-pressed="false">Arrange tiles</button>
+    </div>
+  </header>
+
+  <div class="glass dense banner" id="banner" hidden></div>
+
+  <div class="glass dense editbar" id="editbar" hidden>
+    <p><b>Arranging tiles.</b> Drag any tile to move it. Pull its right edge to make it wider or narrower; wider score widgets show more detail. Tap Done or anywhere outside the tiles when you’re finished.</p>
+    <div class="editrow"><span class="muted" id="hiddenLabel">Hidden tiles:</span><div class="hiddenlist" id="hiddenList"></div></div>
+    <div class="editrow"><button type="button" class="ghost" id="resetLayout">Reset layout</button><button type="button" class="primary" id="doneEdit">Done</button></div>
+  </div>
+
+  <div class="board" id="board">
+    <article class="glass w tile" data-tile="rec" data-w="rec" data-name="Readiness" data-size="M">
+      <div class="whead"><span class="eyebrow">Readiness</span></div>
+      <div class="wbody"></div>
+    </article>
+    <article class="glass w tile" data-tile="sleep" data-w="sleep" data-name="Sleep" data-size="M">
+      <div class="whead"><span class="eyebrow">Sleep</span></div>
+      <div class="wbody"></div>
+    </article>
+    <article class="glass w tile" data-tile="strain" data-w="strain" data-name="Strain" data-size="M">
+      <div class="whead"><span class="eyebrow">Strain</span></div>
+      <div class="wbody"></div>
+    </article>
+
+    <article class="glass w tile" data-tile="stress" data-w="stress" data-name="Stress" data-size="M">
+      <div class="whead"><span class="eyebrow">Stress</span></div>
+      <div class="wbody"></div>
+    </article>
+
+  <section class="glass dense card tile" id="brain" data-tile="brain" data-name="Brain &amp; nervous system">
+    <div class="top">
+      <div style="display:grid;gap:4px;max-width:62ch">
+        <h2>Brain &amp; nervous system</h2>
+        <p class="muted">Estimated from your heart and sleep data for the day shown above. WHOOP doesn’t measure brain activity, so these are indicators, not a brain scan. Tap a region for detail.</p>
+      </div>
+      <div class="cogscore" id="cogScore"></div>
+    </div>
+    <div class="brainwrap">
+      <div style="display:grid;gap:10px;min-width:0">
+        <div class="brainfig" id="brainFig"></div>
+        <div class="threw"><span class="muted">Hover the brain for a thermal view: the deeper the core, the more strain a region is under.</span><div class="thpick" role="group" aria-label="Thermal colours"></div></div>
+      </div>
+      <div class="brainside">
+        <div class="regions" id="brainRegions"></div>
+        <div class="mdetail" id="brainDetail"></div>
+      </div>
+    </div>
+    <div class="stresschart">
+      <p class="muted">Each column is one morning’s stress estimate split by what raised it; under the line, what calmed it. Run along the bars to read them, click one to open that day.</p>
+      <div id="stb-stress"></div>
+    </div>
+  </section>
+
+  <section class="glass dense card tile" id="why" data-tile="why" data-name="What's holding you back">
+    <div style="display:grid;gap:4px;max-width:70ch">
+      <h2>What's holding you back</h2>
+      <p class="muted">Likely causes of this morning's score, ranked. Each comes from your WHOOP data or from what you logged the day and night before.</p>
+    </div>
+    <div class="causes" id="causes"></div>
+  </section>
+
+  <section class="glass dense card tile" id="plan" data-tile="plan" data-name="Training times">
+    <div class="top"><div style="display:grid;gap:4px"><h2>Training times</h2><p class="muted" id="planSub">Free slots in your calendar, matched to how ready you are.</p></div>
+      <div class="range" role="group" aria-label="Day to plan" id="planDays"></div></div>
+    <div class="plansess" id="planSess"></div>
+    <div class="slots" id="planSlots"></div>
+    <p class="msgline" id="planMsg" aria-live="polite"></p>
+  </section>
+
+  <section style="display:grid;gap:14px" class="tile" id="muscles" data-tile="muscles" data-name="Muscle readiness">
+    <div class="top"><h2>Muscle readiness</h2><p class="muted">For the day shown above. Tap a muscle for detail.</p></div>
+    <div class="heat">
+      <div class="glass dense card"><div class="bodies" id="bodies"></div>
+        <div class="ramp"><span>Fatigued</span><span class="r"></span><span>Recovered</span></div>
+        <div class="threw"><span class="muted">Hover the body for a thermal view: the deeper the core, the more load a muscle carries.</span><div class="thpick" role="group" aria-label="Thermal colours"></div></div></div>
+      <div class="glass dense card">
+        <h3>Lift readiness</h3>
+        <div class="lifts" id="lifts"></div>
+        <div class="mdetail" id="mdetail"></div>
+        <p class="note">Logged strength sessions use each exercise, load, reps and RPE. Unlogged WHOOP lifting sessions are spread evenly across all lifting muscles. Muscles recover faster on high-recovery mornings.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="glass dense card tile" id="log" data-tile="log" data-name="Log">
+    <div class="top">
+      <h2>Log</h2>
+      <div class="tabs" role="tablist" aria-label="What to log">
+        <button class="pill" role="tab" data-tab="food" aria-selected="true" aria-pressed="true">Food</button>
+        <button class="pill" role="tab" data-tab="workout" aria-selected="false" aria-pressed="false">Workout</button>
+        <button class="pill" role="tab" data-tab="sleep" aria-selected="false" aria-pressed="false">Sleep</button>
+      </div>
+    </div>
+    <div class="week">
+      <div class="weekhead">
+        <button class="pill" id="wkPrev" aria-label="Previous week">‹</button>
+        <span class="day" id="logDateLabel">—</span>
+        <button class="pill" id="wkNext" aria-label="Next week">›</button>
+        <button class="pill" id="wkToday">Today</button>
+      </div>
+      <div class="days" id="weekDays" role="group" aria-label="Pick a day"></div>
+    </div>
+    <p class="msgline" id="logMsg" aria-live="polite"></p>
+    <div class="logview" id="logView"></div>
+  </section>
+
+  <section class="glass dense card tile" id="connect" data-tile="connect" data-name="Connections">
+    <div style="display:grid;gap:4px;max-width:72ch">
+      <h2>Connections</h2>
+      <p class="muted">Bring in WHOOP, Apple Health and your calendar. Each source can import an export file, or connect live where a connector exists. Switch between the two with the toggle on each card.</p>
+    </div>
+    <div class="conns">
+      <div class="conn">
+        <div class="connhead"><h3>WHOOP</h3><span class="cstate" id="whoopState"><i></i><span>Built-in export</span></span></div>
+        <div class="modeseg" role="group" aria-label="WHOOP: how to bring data in" data-src="whoop"><button type="button" data-mode="import" aria-pressed="true">Import</button><button type="button" data-mode="connect" aria-pressed="false">Connect</button></div>
+        <div class="mpane" data-pane="whoop-import">
+        <p class="muted">In the WHOOP app, find Data Export in your account settings and request your data. WHOOP emails you a ZIP. Upload the ZIP, or the CSV files inside it. Newer days are added, and days you already have are updated.</p>
+        <label class="drop"><input type="file" id="whoopFile" accept=".zip,.csv,application/zip,text/csv" multiple><b>Import WHOOP export</b><span class="muted">ZIP, or physiological_cycles.csv with workouts.csv and journal_entries.csv</span></label>
+        <p class="msgline" id="whoopMsg" aria-live="polite"></p>
+        <button type="button" class="ghost" id="whoopRemove" hidden>Remove imported WHOOP data</button>
+        </div>
+        <div class="mpane soon" data-pane="whoop-connect" hidden>
+          <span class="soonchip">Coming soon</span>
+          <p class="muted">Live WHOOP sync isn’t available yet. WHOOP only opens its live data to apps it has approved, and there’s no WHOOP connector for Claude. Until there is, use Import to bring your data in.</p>
+          <button type="button" class="pill" disabled>Connect WHOOP</button>
+        </div>
+      </div>
+      <div class="conn">
+        <div class="connhead"><h3>Apple Health</h3><span class="cstate" id="appleState"><i></i><span>Not connected</span></span></div>
+        <div class="modeseg" role="group" aria-label="Apple Health: how to bring data in" data-src="apple"><button type="button" data-mode="import" aria-pressed="true">Import</button><button type="button" data-mode="connect" aria-pressed="false">Connect</button></div>
+        <div class="mpane" data-pane="apple-import">
+        <p class="muted">On your iPhone, open Health, tap your profile picture, then Export All Health Data. Save export.zip to Files or AirDrop it to this computer, then upload it here. Steps, active energy, sleep, HRV, resting heart rate, nutrition, water, caffeine and workouts from the last 400 days come in. Data WHOOP wrote to Apple Health is skipped so nothing counts twice.</p>
+        <label class="drop"><input type="file" id="appleFile" accept=".zip,.xml,application/zip,text/xml"><b>Import Apple Health export</b><span class="muted">export.zip or export.xml</span></label>
+        <div class="progress" id="appleProg" hidden><i></i></div>
+        <p class="msgline" id="appleMsg" aria-live="polite"></p>
+        <button type="button" class="ghost" id="appleRemove" hidden>Remove Apple Health data</button>
+        </div>
+        <div class="mpane soon" data-pane="apple-connect" hidden>
+          <span class="soonchip">Coming soon</span>
+          <p class="muted">Apple Health only shares live data with apps on your iPhone, so a web dashboard can’t connect to it directly. A companion iPhone app could sync it here later. Until then, use Import with your Health export.</p>
+          <button type="button" class="pill" disabled>Connect Apple Health</button>
+        </div>
+      </div>
+      <div class="conn">
+        <div class="connhead"><h3>Google Calendar</h3><span class="cstate" id="calState"><i></i><span>Not connected</span></span></div>
+        <div class="modeseg" role="group" aria-label="Google Calendar: how to bring data in" data-src="calendar"><button type="button" data-mode="import" aria-pressed="true">Import</button><button type="button" data-mode="connect" aria-pressed="false">Connect</button></div>
+        <div class="mpane" data-pane="calendar-import">
+          <p class="muted">In Google Calendar on a computer, open Settings, then Import &amp; export, and choose Export. Unzip the download and upload the .ics file for your main calendar. Apple Calendar and Outlook exports work too. Only start and end times are kept, never titles or guests.</p>
+          <label class="drop"><input type="file" id="calFile" accept=".ics,text/calendar"><b>Import calendar</b><span class="muted">.ics file</span></label>
+          <p class="msgline" id="calMsg" aria-live="polite"></p>
+          <button type="button" class="ghost" id="calRemove" hidden>Remove imported calendar</button>
+        </div>
+        <div class="mpane" data-pane="calendar-connect" hidden>
+          <p class="muted">Reads your Google Calendar live through your Claude connector, from six weeks back to two weeks ahead. Busy days feed into Stress and What’s holding you back, free time is used to suggest training times, and you can add sessions to your calendar. Event titles stay on your calendar and aren’t saved here.</p>
+          <div class="btnrow"><button type="button" class="pill" id="calConnect">Connect Google Calendar</button><button type="button" class="ghost" id="calRefresh" hidden>Refresh</button><button type="button" class="ghost" id="calOff" hidden>Disconnect</button></div>
+          <p class="msgline" id="calLive" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+    <p class="note">Imported data is saved to your account and private to you. Your export files are read in your browser and aren’t uploaded. A connected calendar is read each time you open the page and isn’t stored.</p>
+  </section>
+
+  <section style="display:grid;gap:14px" class="tile" id="trends" data-tile="trends" data-name="Trends">
+    <div class="top"><h2>Trends</h2>
+      <div class="range" role="group" aria-label="Time range">
+        <button class="pill" data-range="30" aria-pressed="false">30 days</button>
+        <button class="pill" data-range="90" aria-pressed="true">90 days</button>
+        <button class="pill" data-range="0" aria-pressed="false">All</button>
+      </div></div>
+    <div class="glass dense card"><h3>Readiness by day</h3><p class="muted">Green 67 and up, amber 34–66, coral under 34. Click a bar to open that day.</p><div class="chart" id="c-rec"></div></div>
+    <div class="grid2">
+      <div class="glass dense card"><h3>Heart rate variability</h3><p class="muted">Nightly HRV in ms; dashed line is your 30-day average</p><div class="chart small" id="c-hrv"></div></div>
+      <div class="glass dense card"><h3>Resting heart rate</h3><p class="muted">Nightly resting heart rate in bpm; dashed line is your 30-day average</p><div class="chart small" id="c-rhr"></div></div>
+    </div>
+    <div class="glass dense card"><h3>Sleep stages</h3><p class="muted">Hours asleep by stage; the white tick marks how much sleep you needed</p>
+      <div class="legend"><span><i style="background:var(--deep)"></i>Deep</span><span><i style="background:var(--rem)"></i>REM</span><span><i style="background:var(--light)"></i>Light</span><span><i style="background:#fff;height:2px;vertical-align:3px"></i>Sleep needed</span></div>
+      <div class="chart" id="c-sleep"></div></div>
+  </section>
+
+  <section style="display:grid;gap:14px" class="tile" id="patterns" data-tile="patterns" data-name="What moves your recovery">
+    <h2>What moves your recovery</h2>
+    <p class="lede" id="patLede"></p>
+    <div class="grid2">
+      <div class="glass dense card"><h3>Recovery by bedtime</h3><p class="muted">Average next-morning recovery, by when you fell asleep</p><div id="h-bed"></div></div>
+      <div class="glass dense card"><h3>Recovery by hours slept</h3><p class="muted">Average recovery, by time actually asleep</p><div id="h-len"></div></div>
+    </div>
+  </section>
+  </div>
+
+  <details class="glass dense">
+    <summary>How this dashboard works</summary>
+    <dl>
+      <dt>Your WHOOP data</dt><dd>Built from your export of June 11 to November 5, 2026. Readiness is WHOOP's Recovery score and Sleep is WHOOP's Sleep performance, shown as is. Days after November 5 have logs only until a new export is added.</dd>
+      <dt>Your logs</dt><dd>Each tab works like a diary for the day picked in the week strip: summary cards up top, then rows you tap Log on to add an entry, or the dots to see and edit what you logged. Workouts can be tagged with a coach (Tanner Newman, Charlie Keane or Dillon Johnson). Saved to your account and private to you. Food, workouts and sleep notes feed the analysis and the body map; they never change WHOOP's own scores.</dd>
+      <dt>What's holding you back</dt><dd>Shown on mornings under 67. Checks late bedtime, short sleep, low HRV, raised resting heart rate, hard training, alcohol, late caffeine, late meals, high sodium, low fluids, sleep debt, temperature or breathing changes, and the sleep notes you logged. Food and workouts count from the day before; sleep notes from the night you woke up from. These are likely causes, not a diagnosis.</dd>
+      <dt>Arranging tiles</dt><dd>Press and hold any tile for a moment, then drag it. Every tile then shows a width handle on its right edge and a Hide button; drag any of them straight away. Tap Done, press Esc, or tap outside the tiles to finish. Keyboard users can Tab to "Arrange tiles" at the top.</dd><dt>Connections</dt><dd>Each card has an Import / Connect toggle. WHOOP and Apple Health import export files; live connections for them are coming soon, since neither offers one to a web page. Google Calendar connects live through your Claude connector, or imports an .ics file. WHOOP data replaces or extends the built-in export by date. Apple Health fills in steps, active energy, sleep, HRV and resting heart rate, nutrition and workouts. Apple measures HRV as SDNN and WHOOP as RMSSD, so each is only compared with itself. Apple workouts have no effort score, so they count as moderate effort.</dd><dt>Calendar and stress</dt><dd>Your calendar is turned into a busyness score for each day: hours scheduled past four, events ending after 9 pm, and starts before 7:30 am. A packed day adds to the next morning’s stress estimate (the pink “Busy calendar” segment) and can show up in What’s holding you back. All-day events, declined invites and events marked free don’t count.</dd><dt>Training times</dt><dd>Free gaps between 6 am and 10 pm, with 20 minutes of buffer around events and at least two hours before your usual bedtime. Session length follows your latest Readiness: 90 minutes when recovered, 60 when recovering, 40 for light work when under 34. Late afternoon is ranked first for strength work.</dd><dt>Tile sizes</dt><dd>While arranging, drag a tile’s right edge to resize it, or hide tiles you don’t need. A score widget one column wide shows the score; two or three columns add the headline or key numbers; full width adds contributors and the last 7 days. Your layout is saved to your account. With a keyboard, focus a handle and use the arrow keys.</dd>
+      <dt>Muscle readiness</dt><dd>An estimate from training load, not a measurement. Each exercise loads muscles by a fixed share; each muscle recovers at its own rate.</dd>
+      <dt>Training load</dt><dd>Session load is duration × effort (session RPE). Over 600 counts as a hard day.</dd>
+      <dt>Estimated 1RM</dt><dd>Load × (1 + (reps + reps in reserve) ÷ 30), where reps in reserve is 10 minus RPE.</dd>
+      <dt>Rep slowdown</dt><dd>From reps you mark on the video: 1 minus the first rep's lifting time divided by the last rep's.</dd>
+      <dt>Videos</dt><dd>Stored with this dashboard, up to 20 MB each. Anyone you share the dashboard with in your organization could open a video's link.</dd>
+    </dl>
+  </details>
+  <div class="sheet" id="sheet" hidden>
+    <div class="scrim" data-close></div>
+    <div class="sheetpanel glass dense" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <header class="sheethead">
+        <button type="button" class="iconbtn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <h2 id="sheetTitle">Edit entry</h2>
+        <button type="button" class="iconbtn" id="sheetSave" aria-label="Save">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </header>
+      <div class="sheetbody">
+
+        <form class="sheetsec" data-sheet="food" id="p-food" novalidate>
+          <input class="bigname" id="f-name" placeholder="Food name, e.g. Caesar salad" maxlength="80" aria-label="Food name">
+          <div class="rows">
+            <label class="row"><span>Serving size</span><input class="box" id="f-serving" placeholder="1 salad (about 3 cups)" maxlength="60"></label>
+            <label class="row"><span>Number of servings</span><input class="box sm" id="f-servings" type="number" min="0.25" max="20" step="0.25" value="1" inputmode="decimal"></label>
+            <label class="row"><span>Meal</span><select class="box" id="f-meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option></select></label>
+            <label class="row"><span>Date</span><input class="box" type="date" id="f-date"></label>
+            <label class="row"><span>Time</span><input class="box" type="time" id="f-time" value="12:30"></label>
+          </div>
+          <div class="persec">
+            <span class="seclabel">Per serving</span>
+            <div class="grid4">
+              <label class="field">Calories<input type="number" id="f-kcal" min="0" max="5000" inputmode="numeric"></label>
+              <label class="field">Carbs (g)<input type="number" id="f-carbs" min="0" max="800" step="0.1" inputmode="decimal"></label>
+              <label class="field">Fat (g)<input type="number" id="f-fat" min="0" max="300" step="0.1" inputmode="decimal"></label>
+              <label class="field">Protein (g)<input type="number" id="f-protein" min="0" max="400" step="0.1" inputmode="decimal"></label>
+            </div>
+          </div>
+          <div class="donutrow" id="f-donut"></div>
+          <div class="goalsec"><h3>Percent of daily goals</h3><div class="goalbars" id="f-goalbars"></div></div>
+          <details class="facts">
+            <summary>Nutrition facts <span class="muted">fiber, sodium, water, caffeine, alcohol</span></summary>
+            <div class="grid4">
+              <label class="field">Fiber (g)<input type="number" id="f-fiber" min="0" max="150" step="0.1" inputmode="decimal"></label>
+              <label class="field">Sodium (mg)<input type="number" id="f-sodium" min="0" max="15000" inputmode="numeric"></label>
+              <label class="field">Water (ml)<input type="number" id="f-water" min="0" max="6000" step="50" inputmode="numeric"></label>
+              <label class="field">Alcoholic drinks<input type="number" id="f-alcohol" min="0" max="20" value="0" inputmode="numeric"></label>
+            </div>
+            <div class="checks"><label class="check"><input type="checkbox" id="f-caffeine">Caffeine</label><label class="check"><input type="checkbox" id="f-dairy">Dairy</label></div>
+            <p class="note">Fiber, sodium and water are per serving too.</p>
+          </details>
+          <div class="sheetfoot"><button class="primary" type="submit" id="f-save">Save food</button><button type="button" class="ghost" id="f-del" hidden>Delete</button></div>
+          <p class="msgline" id="f-msg" aria-live="polite"></p>
+        </form>
+
+        <form class="sheetsec" data-sheet="workout" id="p-workout" novalidate hidden>
+          <input class="bigname" id="w-name" placeholder="Session name, e.g. Heavy lower" maxlength="60" aria-label="Session name">
+          <div class="rows">
+            <label class="row"><span>Coach</span>
+              <select class="box" id="w-coach"><option value="">No coach</option><option>Tanner Newman</option><option>Charlie Keane</option><option>Dillon Johnson</option></select></label>
+            <label class="row"><span>Type</span><select class="box" id="w-kind"><option value="strength">Strength</option><option value="cardio">Cardio</option><option value="sport">Sport</option><option value="other">Other</option></select></label>
+            <label class="row"><span>Date</span><input class="box" type="date" id="w-date"></label>
+            <label class="row"><span>Start time</span><input class="box sm" type="time" id="w-time"></label>
+            <label class="row"><span>Duration (min)</span><input class="box sm" type="number" id="w-min" min="1" max="600" inputmode="numeric"></label>
+            <label class="row"><span>Session effort (1–10)</span><input class="box sm" type="number" id="w-effort" min="1" max="10" step="0.5" inputmode="decimal"></label>
+            <label class="row" id="w-calrow" hidden><span>Add to Google Calendar</span><input type="checkbox" id="w-cal"></label>
+          </div>
+          <div class="donutrow" id="w-donut"></div>
+          <div id="w-strength" class="exsec">
+            <h3>Exercises</h3>
+            <div class="draft" id="draft"></div>
+            <div class="split">
+              <div style="display:grid;gap:12px;align-content:start">
+                <div class="grid4">
+                  <label class="field" style="grid-column:span 2">Exercise
+                    <select id="x-ex">
+                      <option value="squat">Squat</option><option value="bench">Bench press</option><option value="deadlift">Deadlift</option>
+                      <option value="ohp">Overhead press</option><option value="row">Barbell row</option><option value="rdl">Romanian deadlift</option>
+                      <option value="pull">Pull-up / lat pulldown</option><option value="legpress">Leg press</option><option value="lunge">Lunge / split squat</option>
+                      <option value="dip">Dip</option><option value="other">Other</option>
+                    </select></label>
+                  <label class="field">Load (kg)<input type="number" id="x-load" min="0" max="500" step="0.5" inputmode="decimal"></label>
+                  <label class="field">Reps<input type="number" id="x-reps" min="1" max="30" inputmode="numeric"></label>
+                  <label class="field">RPE<select id="x-rpe"><option>6</option><option>6.5</option><option>7</option><option>7.5</option><option selected>8</option><option>8.5</option><option>9</option><option>9.5</option><option>10</option></select></label>
+                  <label class="field">Sets<input type="number" id="x-sets" min="1" max="15" value="1" inputmode="numeric"></label>
+                </div>
+                <p class="muted" id="x-e1rm">Enter load and reps to see an estimated 1RM.</p>
+                <button type="button" class="ghost" id="x-add" disabled>Add exercise</button>
+              </div>
+              <div style="display:grid;gap:10px;align-content:start">
+                <label class="drop" id="drop"><input type="file" id="x-file" accept="video/*"><b>Add a set video (optional)</b><span class="muted">Side-on works best. Saved with the exercise.</span></label>
+                <div id="vidbox"></div>
+                <div class="marks" id="marks" hidden>
+                  <button type="button" class="pill" id="m-start">Rep start (bottom)</button>
+                  <button type="button" class="pill" id="m-end">Lockout</button>
+                  <button type="button" class="pill" id="m-undo">Undo</button>
+                  <button type="button" class="pill" id="m-clear">Remove video</button>
+                </div>
+                <div id="repout" style="display:grid;gap:8px"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sheetfoot"><button class="primary" type="submit" id="w-save" disabled>Save workout</button><button type="button" class="ghost" id="w-del" hidden>Delete</button></div>
+          <p class="msgline" id="w-msg" aria-live="polite"></p>
+        </form>
+
+        <form class="sheetsec" data-sheet="sleep" id="p-sleep" novalidate hidden>
+          <div class="rows">
+            <label class="row"><span>Woke up on</span><input class="box" type="date" id="s-date"></label>
+            <label class="row"><span>Bedtime</span><input class="box" type="time" id="s-bed"></label>
+            <label class="row"><span>Wake time</span><input class="box" type="time" id="s-wake"></label>
+          </div>
+          <div class="donutrow" id="s-donut"></div>
+          <div style="display:grid;gap:6px">
+            <span class="seclabel">How rested do you feel?</span>
+            <div class="rested" role="group" aria-label="How rested">
+              <button type="button" data-r="1">1 · Exhausted</button><button type="button" data-r="2">2 · Tired</button><button type="button" data-r="3">3 · OK</button><button type="button" data-r="4">4 · Good</button><button type="button" data-r="5">5 · Great</button>
+            </div>
+          </div>
+          <div class="checks" id="s-tags">
+            <label class="check"><input type="checkbox" value="noise">Noise</label>
+            <label class="check"><input type="checkbox" value="screens">Late screens</label>
+            <label class="check"><input type="checkbox" value="stress">Stress</label>
+            <label class="check"><input type="checkbox" value="hot">Room too hot</label>
+            <label class="check"><input type="checkbox" value="woke">Woke in the night</label>
+            <label class="check"><input type="checkbox" value="travel">Travel</label>
+            <label class="check"><input type="checkbox" value="sore">Sore</label>
+          </div>
+          <label class="field">Notes<textarea id="s-note" maxlength="400" placeholder="Anything else about the night"></textarea></label>
+          <div class="sheetfoot"><button class="primary" type="submit" id="s-save" disabled>Save sleep</button><button type="button" class="ghost" id="s-del" hidden>Delete</button></div>
+          <p class="msgline" id="s-msg" aria-live="polite"></p>
+        </form>
+
+        <form class="sheetsec" data-sheet="goals" id="p-goals" novalidate hidden>
+          <p class="muted">Daily targets for the food view. Leave any blank to just see totals.</p>
+          <div class="rows">
+            <label class="row"><span>Calories</span><input class="box sm" type="number" id="g-kcal" min="0" max="10000" inputmode="numeric"></label>
+            <label class="row"><span>Carbs (g)</span><input class="box sm" type="number" id="g-carbs" min="0" max="1500" inputmode="numeric"></label>
+            <label class="row"><span>Fat (g)</span><input class="box sm" type="number" id="g-fat" min="0" max="500" inputmode="numeric"></label>
+            <label class="row"><span>Protein (g)</span><input class="box sm" type="number" id="g-protein" min="0" max="600" inputmode="numeric"></label>
+            <label class="row"><span>Fiber (g)</span><input class="box sm" type="number" id="g-fiber" min="0" max="200" inputmode="numeric"></label>
+            <label class="row"><span>Sodium (mg)</span><input class="box sm" type="number" id="g-sodium" min="0" max="15000" inputmode="numeric"></label>
+            <label class="row"><span>Water (ml)</span><input class="box sm" type="number" id="g-water" min="0" max="10000" step="100" inputmode="numeric"></label>
+          </div>
+          <div class="sheetfoot"><button class="primary" type="submit" id="g-save">Save goals</button></div>
+          <p class="msgline" id="g-msg" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
